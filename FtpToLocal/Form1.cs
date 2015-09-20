@@ -143,63 +143,70 @@ namespace FtpToLocal
         {
             try
             {
+
+                string[] Paths = System.Configuration.ConfigurationSettings.AppSettings["DestRoot"].Trim().Split('#');
                 string FilePath = dataGridView1.Rows[Indx].Cells[1].Value.ToString();
-                FtpWebRequest request = (FtpWebRequest)FtpWebRequest.Create(FilePath);
-                request.Method = WebRequestMethods.Ftp.DownloadFile;
-                request.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
-                    System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
-                request.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
-                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-                Stream responseStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(responseStream);
-                if (!Directory.Exists(System.Configuration.ConfigurationSettings.AppSettings["DestRoot"].Trim()))
+                foreach (var item in Paths)
                 {
-                    Directory.CreateDirectory(System.Configuration.ConfigurationSettings.AppSettings["DestRoot"].Trim());
-                }
-                FileStream file = File.Create(System.Configuration.ConfigurationSettings.AppSettings["DestRoot"].Trim() + Path.GetFileName(FilePath));
-                byte[] buffer = new byte[32 * 1024];
-                int read;
-                FtpWebRequest request2 = (FtpWebRequest)FtpWebRequest.Create(new Uri(FilePath));
-                request2.Method = WebRequestMethods.Ftp.GetFileSize;
-                //string ss= ConfigurationManager.AppSettings["ConnectionString"];
-                request2.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
-                      System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
-                request2.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
-                FtpWebResponse result2 = (FtpWebResponse)request2.GetResponse();
-                long length = result2.ContentLength;
-                progressBar1.Maximum = 100;
-                dataGridView1.Rows[_CurIndex].Cells[2].Value = "In Progress";
-                if (dataGridView1.Rows.Count > 0)
-                {
-                    dataGridView1.Rows[_CurIndex].Selected = true;
-                    dataGridView1.FirstDisplayedScrollingRowIndex = _CurIndex;
-                }
-                long bfr = 0;
-                while ((read = responseStream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    bfr += read;
-                    int Pr = (int)Math.Ceiling(double.Parse(((bfr * 100) / length).ToString()));
-                    progressBar1.Value = Pr;
-                    file.Write(buffer, 0, read);
-                    label4.Text = Pr.ToString() + "%";
-                    Application.DoEvents();
+                    FtpWebRequest request = (FtpWebRequest)FtpWebRequest.Create(FilePath);
+                    request.Method = WebRequestMethods.Ftp.DownloadFile;
+                    request.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
+                        System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
+                    request.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
+                    FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+                    Stream responseStream = response.GetResponseStream();
+                    StreamReader reader = new StreamReader(responseStream);
+                    if (!Directory.Exists(item))
+                    {
+                        Directory.CreateDirectory(item);
+                    }
+                    FileStream file = File.Create(item + Path.GetFileName(FilePath));
+                    byte[] buffer = new byte[32 * 1024];
+                    int read;
+                    FtpWebRequest request2 = (FtpWebRequest)FtpWebRequest.Create(new Uri(FilePath));
+                    request2.Method = WebRequestMethods.Ftp.GetFileSize;
+                    //string ss= ConfigurationManager.AppSettings["ConnectionString"];
+                    request2.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
+                          System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
+                    request2.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
+                    FtpWebResponse result2 = (FtpWebResponse)request2.GetResponse();
+                    long length = result2.ContentLength;
+                    progressBar1.Maximum = 100;
+                    dataGridView1.Rows[_CurIndex].Cells[2].Value = "In Progress";
+                    if (dataGridView1.Rows.Count > 0)
+                    {
+                        dataGridView1.Rows[_CurIndex].Selected = true;
+                        dataGridView1.FirstDisplayedScrollingRowIndex = _CurIndex;
+                    }
+                    long bfr = 0;
+                    while ((read = responseStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        bfr += read;
+                        int Pr = (int)Math.Ceiling(double.Parse(((bfr * 100) / length).ToString()));
+                        progressBar1.Value = Pr;
+                        file.Write(buffer, 0, read);
+                        label4.Text = Pr.ToString() + "%";
+                        Application.DoEvents();
+                    }
+
+                    file.Close();
+                    responseStream.Close();
+                    response.Close();
                 }
 
-                file.Close();
-                responseStream.Close();
-                response.Close();
+
                 // string fileName = "arahimkhan.txt";
 
                 //if (System.Configuration.ConfigurationSettings.AppSettings["Delete"].Trim().ToLower() == "true")
                 //{
-                    FtpWebRequest request3 = (FtpWebRequest)FtpWebRequest.Create(new Uri(FilePath));
-                    request3.Method = WebRequestMethods.Ftp.DeleteFile;
-                    request3.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
-                          System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
-                    request3.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
-                    FtpWebResponse result3 = (FtpWebResponse)request3.GetResponse();
-                    result3.Close();
-               // }
+                FtpWebRequest request3 = (FtpWebRequest)FtpWebRequest.Create(new Uri(FilePath));
+                request3.Method = WebRequestMethods.Ftp.DeleteFile;
+                request3.Credentials = new NetworkCredential(System.Configuration.ConfigurationSettings.AppSettings["UserName"].Trim(),
+                      System.Configuration.ConfigurationSettings.AppSettings["PassWord"].Trim());
+                request3.UsePassive = bool.Parse(System.Configuration.ConfigurationSettings.AppSettings["Passive"].Trim());
+                FtpWebResponse result3 = (FtpWebResponse)request3.GetResponse();
+                result3.Close();
+                // }
 
                 dataGridView1.Rows[_CurIndex].Cells[2].Value = "Done";
                 label14.Text = DateTime.Now.ToString();
@@ -244,7 +251,7 @@ namespace FtpToLocal
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-           
+
             timer1.Enabled = false;
             dataGridView1.DataSource = null;
             label14.Text = DateTime.Now.ToString();
